@@ -25,11 +25,11 @@ public:
     };
     double operator[](int i) const { return coordonnees[i]; };
     double& operator[](int i) { return coordonnees[i]; };
-    double NormeAuCarre() { 
+    double NormSquared() { 
         return coordonnees[0] * coordonnees[0] + coordonnees[1] * coordonnees[1] + coordonnees[2] * coordonnees[2];
     }
-    Vector3 normaliser() { 
-        double norme = sqrt(NormeAuCarre());
+    Vector3 Normalize() { 
+        double norme = sqrt(NormSquared());
         return Vector3(coordonnees[0] / norme, coordonnees[1] / norme, coordonnees[2] / norme);
     }
 private:
@@ -99,7 +99,7 @@ Vector3 RandomInUnitSphere(const Vector3& N) {
         }
     }
 
-    T1 = T1.normaliser();
+    T1 = T1.Normalize();
     Vector3 T2 = CrossProduct(N, T1);
     return x * T1 + y * T2 + z * N;
 
@@ -122,15 +122,15 @@ public:
         // résout a*t² + b*t + c = 0
         double a = 1;
         double b = 2 * DotProduct(r.u, r.C - O);
-        double c = (r.C - O).NormeAuCarre() - R * R;
+        double c = (r.C - O).NormSquared() - R * R;
         double delta = b * b - 4 * a * c;
         if (delta < 0) return false; 
 
-        double racinedelta = sqrt(delta);
-        double t2 = (-b + racinedelta) / (2 * a);
+        double sqrtDelta = sqrt(delta);
+        double t2 = (-b + sqrtDelta) / (2 * a);
         if (t2 < 0) return false; 
 
-        double t1 = (-b - racinedelta) / (2 * a);
+        double t1 = (-b - sqrtDelta) / (2 * a);
         if (t1 > 0) 
             t = t1;
 
@@ -138,7 +138,7 @@ public:
             t = t2;
 
         P = r.C + t * r.u; 
-        N = (P - O).normaliser(); 
+        N = (P - O).Normalize(); 
 
         return true;
 
@@ -190,9 +190,9 @@ public:
                 }
 
                 if (mirror) { 
-                    Vector3 Directionreflechie = r.u - 2 * DotProduct(r.u, N) * N; 
-                    Ray Rayreflechi(P + 0.00001 * N, Directionreflechie); 
-                    return obtenircolor(Rayreflechi, bounce + 1, false);
+                    Vector3 reflectedDirection = r.u - 2 * DotProduct(r.u, N) * N; 
+                    Ray reflectedRay(P + 0.00001 * N, reflectedDirection); 
+                    return obtenircolor(reflectedRay, bounce + 1, false);
                 }
                 else {
                     if (transp) { 
@@ -205,23 +205,23 @@ public:
                         }
                         double angle = 1 - n1 * n1 / (n2 * n2) * (1 - DotProduct(r.u, N2) * DotProduct(r.u, N2));
                         if (angle < 0) { 
-                            Vector3 Directionreflechie = r.u - 2 * DotProduct(r.u, N) * N;
-                            Ray Rayreflechi(P + 0.00001 * N, Directionreflechie);
-                            return obtenircolor(Rayreflechi, bounce + 1, false);
+                            Vector3 reflectedDirection = r.u - 2 * DotProduct(r.u, N) * N;
+                            Ray reflectedRay(P + 0.00001 * N, reflectedDirection);
+                            return obtenircolor(reflectedRay, bounce + 1, false);
                         }
                         Vector3 Tt = n1 / n2 * (r.u - DotProduct(r.u, N2) * N2); 
                         Vector3 Tn = -sqrt(angle) * N2; 
-                        Vector3 Directionrefractee = Tt + Tn; 
-                        Ray Rayrefracte(P - 0.0001 * N2, Directionrefractee); 
-                        return obtenircolor(Rayrefracte, bounce + 1, false);
+                        Vector3 refractedDirection = Tt + Tn; 
+                        Ray refractedRay(P - 0.0001 * N2, refractedDirection); 
+                        return obtenircolor(refractedRay, bounce + 1, false);
                     }
                     else {
                         
-                        Vector3 w = RandomInUnitSphere((P - lightPosition).normaliser()); 
+                        Vector3 w = RandomInUnitSphere((P - lightPosition).Normalize()); 
                         Vector3 xp = w * objects[0].R + objects[0].O;
                         Vector3 Pxp = xp - P;
-                        double normePxp = sqrt(Pxp.NormeAuCarre());
-                        Pxp = Pxp.normaliser();
+                        double normePxp = sqrt(Pxp.NormSquared());
+                        Pxp = Pxp.Normalize();
                         Vector3 Pshadow, Nshadow, albedoshadow;
                         double tshadow;
                         bool mirrorshadow, transshadow;
@@ -231,15 +231,15 @@ public:
                             color = Vector3(0., 0., 0.);
                         }
                         else {
-                            color = lightIntensity / (4 * M_PI * M_PI * objects[0].R * objects[0].R) * albedo / M_PI * std::max(0., DotProduct(N, Pxp)) * std::max(0., -DotProduct(w, Pxp)) / (normePxp * normePxp) / (std::max(0., -DotProduct((lightPosition - P).normaliser(), w)) / (M_PI * objects[0].R * objects[0].R));
+                            color = lightIntensity / (4 * M_PI * M_PI * objects[0].R * objects[0].R) * albedo / M_PI * std::max(0., DotProduct(N, Pxp)) * std::max(0., -DotProduct(w, Pxp)) / (normePxp * normePxp) / (std::max(0., -DotProduct((lightPosition - P).Normalize(), w)) / (M_PI * objects[0].R * objects[0].R));
                         }
 
 
 
                         
-                        Vector3 wi = RandomInUnitSphere(N);
-                        Ray Raywi(P + 0.00001 * N, wi);
-                        color = color + TermByTermProduct(albedo, obtenircolor(Raywi, bounce + 1, true));
+                        Vector3 random = RandomInUnitSphere(N);
+                        Ray Rayrandom(P + 0.00001 * N, random);
+                        color = color + TermByTermProduct(albedo, obtenircolor(Rayrandom, bounce + 1, true));
 
 
                     }
@@ -299,7 +299,7 @@ int main() {
                 double x1 = 0.25 * cos(2 * M_PI * u1) * sqrt(-2 * log(u2));
                 double x2 = 0.25 * sin(2 * M_PI * u1) * sqrt(-2 * log(u2));
                 Vector3 u(j - W / 2 + x2 + 0.5, i - H / 2 + x1 + 0.5, -W / (2. * tan(fov / 2))); // antialiasing
-                u = u.normaliser();
+                u = u.Normalize();
 
                 Ray r(C, u);
 
