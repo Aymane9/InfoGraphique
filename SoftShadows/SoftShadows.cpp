@@ -119,7 +119,7 @@ public:
     Sphere(const Vector3& O, double R, const Vector3& albedo, bool mirror = false, bool Transparent = false) : O(O), R(R), albedo(albedo), mirror(mirror), Transparent(Transparent) {
     }
     bool intersection(const Ray& r, Vector3& P, Vector3& N, double& t) {
-        // résout a*t² + b*t + c = 0
+        // solve a*t² + b*t + c = 0
         double a = 1;
         double b = 2 * DotProduct(r.u, r.C - O);
         double c = (r.C - O).NormSquared() - R * R;
