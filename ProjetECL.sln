@@ -17,7 +17,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "6.DepthOfField", "DepthOfFi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "7.Maillage", "Maillage\Maillage.vcxproj", "{499EB633-F85C-4C44-8AE3-6D6117E6ADE9}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Textures", "Textures\Textures.vcxproj", "{63D8A1B7-1896-47E9-854E-9E5F88280E62}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "8.Textures", "Textures\Textures.vcxproj", "{63D8A1B7-1896-47E9-854E-9E5F88280E62}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{EF5FD62A-4E5B-47DF-B197-C77EC695F35D}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\Desktop\Rapport_Infographique.pdf = ..\..\..\Desktop\Rapport_Infographique.pdf
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
