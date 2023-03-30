@@ -16,7 +16,7 @@
 static std::default_random_engine engine(10);
 static std::uniform_real_distribution<double> uniform(0, 1);
 
-class Vector3 { 
+class Vector3 {
 public:
     explicit Vector3(double x = 0, double y = 0, double z = 0) {
         coordonnees[0] = x;
@@ -25,10 +25,10 @@ public:
     };
     double operator[](int i) const { return coordonnees[i]; };
     double& operator[](int i) { return coordonnees[i]; };
-    double NormSquared() { 
+    double NormSquared() {
         return coordonnees[0] * coordonnees[0] + coordonnees[1] * coordonnees[1] + coordonnees[2] * coordonnees[2];
     }
-    Vector3 Normalize() { 
+    Vector3 Normalize() {
         double norme = sqrt(NormSquared());
         return Vector3(coordonnees[0] / norme, coordonnees[1] / norme, coordonnees[2] / norme);
     }
@@ -36,11 +36,11 @@ private:
     double coordonnees[3];
 };
 
-Vector3 operator+(const Vector3& a, const Vector3& b) { 
+Vector3 operator+(const Vector3& a, const Vector3& b) {
     return Vector3(a[0] + b[0], a[1] + b[1], a[2] + b[2]);
 }
 
-Vector3 operator-(const Vector3& a, const Vector3& b) { 
+Vector3 operator-(const Vector3& a, const Vector3& b) {
     return Vector3(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 }
 
@@ -48,12 +48,12 @@ Vector3 operator-(const Vector3& a) {
     return Vector3(-a[0], -a[1], -a[2]);
 }
 
-Vector3 operator*(double a, const Vector3& b) { 
+Vector3 operator*(double a, const Vector3& b) {
     return Vector3(a * b[0], a * b[1], a * b[2]);
 }
 
 
-Vector3 operator*(const Vector3& a, double b) { 
+Vector3 operator*(const Vector3& a, double b) {
     return Vector3(a[0] * b, a[1] * b, a[2] * b);
 }
 
@@ -61,11 +61,11 @@ Vector3 operator*(const Vector3& a, const Vector3& b) {
     return Vector3(a[0] * b[0], a[1] * b[1], a[2] * b[2]);
 }
 
-Vector3 operator/(const Vector3& a, double b) { 
+Vector3 operator/(const Vector3& a, double b) {
     return Vector3(a[0] / b, a[1] / b, a[2] / b);
 }
 
-Vector3 CrossProduct(const Vector3& a, const Vector3& b) { 
+Vector3 CrossProduct(const Vector3& a, const Vector3& b) {
     return Vector3(a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]);
 
 }
@@ -74,14 +74,14 @@ double DotProduct(const Vector3& a, const Vector3& b) {
     return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
-Vector3 TermByTermProduct(const Vector3& a, const Vector3& b) { 
+Vector3 TermByTermProduct(const Vector3& a, const Vector3& b) {
     return Vector3(a[0] * b[0], a[1] * b[1], a[2] * b[2]);
 }
 
 
 
-Vector3 RandomInUnitSphere(const Vector3& N) { 
-    double u1 = uniform(engine); 
+Vector3 RandomInUnitSphere(const Vector3& N) {
+    double u1 = uniform(engine);
     double u2 = uniform(engine);
     double x = cos(2 * M_PI * u1) * sqrt(1 - u2);
     double y = sin(2 * M_PI * u1) * sqrt(1 - u2);
@@ -107,38 +107,37 @@ Vector3 RandomInUnitSphere(const Vector3& N) {
 
 
 
-class Ray { 
+class Ray {
 public:
     Ray(const Vector3& C, const Vector3& u) : C(C), u(u) {
     }
     Vector3 C, u;
 };
 
-class Sphere { 
+class Sphere {
 public:
     Sphere(const Vector3& O, double R, const Vector3& albedo, bool mirror = false, bool Transparent = false) : O(O), R(R), albedo(albedo), mirror(mirror), Transparent(Transparent) {
     }
     bool intersection(const Ray& r, Vector3& P, Vector3& N, double& t) {
-        // résout a*t² + b*t + c = 0
         double a = 1;
         double b = 2 * DotProduct(r.u, r.C - O);
         double c = (r.C - O).NormSquared() - R * R;
         double delta = b * b - 4 * a * c;
-        if (delta < 0) return false; 
+        if (delta < 0) return false;
 
         double sqrtDelta = sqrt(delta);
         double t2 = (-b + sqrtDelta) / (2 * a);
-        if (t2 < 0) return false; 
+        if (t2 < 0) return false;
 
         double t1 = (-b - sqrtDelta) / (2 * a);
-        if (t1 > 0) 
+        if (t1 > 0)
             t = t1;
 
         else
             t = t2;
 
-        P = r.C + t * r.u; 
-        N = (P - O).Normalize(); 
+        P = r.C + t * r.u;
+        N = (P - O).Normalize();
 
         return true;
 
@@ -149,7 +148,7 @@ public:
     bool mirror, Transparent;
 };
 
-class Scene { 
+class Scene {
 public:
     Scene() {};
     bool intersection(const Ray& r, Vector3& P, Vector3& N, Vector3& albedo, double& t, bool& mirror, bool& transp, int& id) {
@@ -158,7 +157,7 @@ public:
         for (int i = 0; i < objects.size(); i++) {
             Vector3 Pobjet, Nobjet;
             double tobjet;
-            if (objects[i].intersection(r, Pobjet, Nobjet, tobjet) && tobjet < t) { 
+            if (objects[i].intersection(r, Pobjet, Nobjet, tobjet) && tobjet < t) {
                 intersecte = true;
                 t = tobjet;
                 P = Pobjet;
@@ -173,8 +172,8 @@ public:
         return intersecte;
     }
 
-    Vector3 obtenircolor(const Ray& r, int bounce, bool lastdiffusion) { 
-        if (bounce > 5) return Vector3(0., 0., 0.); 
+    Vector3 obtenircolor(const Ray& r, int bounce, bool lastdiffusion) {
+        if (bounce > 5) return Vector3(0., 0., 0.);
         else {
             double t;
             bool mirror, transp;
@@ -182,42 +181,42 @@ public:
             Vector3 color(0, 0, 0);
             int id;
             if (intersection(r, P, N, albedo, t, mirror, transp, id)) {
-                if (id == 0) { 
+                if (id == 0) {
                     if (bounce == 0 || !lastdiffusion)
                         return lightIntensity / (4 * M_PI * M_PI * objects[0].R * objects[0].R);
                     else
                         return Vector3(0, 0, 0);
                 }
 
-                if (mirror) { 
-                    Vector3 reflectedDirection = r.u - 2 * DotProduct(r.u, N) * N; 
-                    Ray reflectedRay(P + 0.00001 * N, reflectedDirection); 
+                if (mirror) {
+                    Vector3 reflectedDirection = r.u - 2 * DotProduct(r.u, N) * N;
+                    Ray reflectedRay(P + 0.00001 * N, reflectedDirection);
                     return obtenircolor(reflectedRay, bounce + 1, false);
                 }
                 else {
-                    if (transp) { 
+                    if (transp) {
 
-                        double n1 = 1., n2 = 1.4; 
+                        double n1 = 1., n2 = 1.4;
                         Vector3 N2 = N;
-                        if (DotProduct(r.u, N) > 0) { 
+                        if (DotProduct(r.u, N) > 0) {
                             std::swap(n1, n2);
                             N2 = -N;
                         }
                         double angle = 1 - n1 * n1 / (n2 * n2) * (1 - DotProduct(r.u, N2) * DotProduct(r.u, N2));
-                        if (angle < 0) { 
+                        if (angle < 0) {
                             Vector3 reflectedDirection = r.u - 2 * DotProduct(r.u, N) * N;
                             Ray reflectedRay(P + 0.00001 * N, reflectedDirection);
                             return obtenircolor(reflectedRay, bounce + 1, false);
                         }
-                        Vector3 Tt = n1 / n2 * (r.u - DotProduct(r.u, N2) * N2); 
-                        Vector3 Tn = -sqrt(angle) * N2; 
-                        Vector3 refractedDirection = Tt + Tn; 
-                        Ray refractedRay(P - 0.0001 * N2, refractedDirection); 
+                        Vector3 Tt = n1 / n2 * (r.u - DotProduct(r.u, N2) * N2);
+                        Vector3 Tn = -sqrt(angle) * N2;
+                        Vector3 refractedDirection = Tt + Tn;
+                        Ray refractedRay(P - 0.0001 * N2, refractedDirection);
                         return obtenircolor(refractedRay, bounce + 1, false);
                     }
                     else {
-                        
-                        Vector3 w = RandomInUnitSphere((P - lightPosition).Normalize()); 
+
+                        Vector3 w = RandomInUnitSphere((P - lightPosition).Normalize());
                         Vector3 xp = w * objects[0].R + objects[0].O;
                         Vector3 Pxp = xp - P;
                         double normePxp = sqrt(Pxp.NormSquared());
@@ -236,7 +235,7 @@ public:
 
 
 
-                        
+
                         Vector3 random = RandomInUnitSphere(N);
                         Ray Rayrandom(P + 0.00001 * N, random);
                         color = color + TermByTermProduct(albedo, obtenircolor(Rayrandom, bounce + 1, true));
@@ -264,7 +263,9 @@ int main() {
     scene.lightPosition = Vector3(-10, 20, 40);
 
     Sphere SLight(scene.lightPosition, 5, Vector3(1., 0.3, 0.2));
-    Sphere S1(Vector3(0, 0, 0), 10, Vector3(1.0, 0.0, 0.0), false, true);
+    Sphere S1(Vector3(0, 0, 0), 10, Vector3(1.0, 0.0, 0.0));
+    Sphere S2(Vector3(-10, 0, -20), 10, Vector3(0., 1., 0.));
+    Sphere S3(Vector3(10, 0, 20), 10, Vector3(0.7, 0., 0.7));
     Sphere Sfront(Vector3(0, 0, 1000), 940, Vector3(1.0, 0.0, 0.0)); // red
     Sphere Sback(Vector3(0, 0, -1000), 940, Vector3(0., 0.4, 1.)); // blue
     Sphere Stop(Vector3(0, 1000, 0), 940, Vector3(0.7, 0., 0.7)); // violet
@@ -274,6 +275,8 @@ int main() {
 
     scene.objects.push_back(SLight);
     scene.objects.push_back(S1);
+    scene.objects.push_back(S2);
+    scene.objects.push_back(S3);
     scene.objects.push_back(Sleft);
     scene.objects.push_back(Sright);
     scene.objects.push_back(Stop);
@@ -284,7 +287,7 @@ int main() {
 
     double fov = 60 * M_PI / 180;
     scene.lightIntensity = Vector3(5E9, 5E9, 5E9);
-    int nmbRay = 50;
+    int nmbRay = 60;
 
     std::vector<unsigned char> image(W * H * 3, 0);
     for (int i = 0; i < H; i++) {
@@ -300,9 +303,21 @@ int main() {
                 Vector3 u(j - W / 2 + x2 + 0.5, i - H / 2 + x1 + 0.5, -W / (2. * tan(fov / 2))); // antialiasing
                 u = u.Normalize();
 
-                Ray r(C, u);
+                double u3 = uniform(engine);
+                double u4 = uniform(engine);
+                double x3 = 1 * cos(2 * M_PI * u3) * sqrt(-2 * log(u4));
+                double x4 = 1 * sin(2 * M_PI * u3) * sqrt(-2 * log(u4));
+
+                
+
+                Vector3 Focalpoint = C + 55 * u; 
+                Vector3 RandOrigin = C + Vector3(x3, x4, 0); 
+                Vector3 Raydir = (Focalpoint - RandOrigin).Normalize(); 
+
+                Ray r(RandOrigin, Raydir);
 
                 color = color + scene.obtenircolor(r, 0, false);
+
             }
             color = color / nmbRay;
 
