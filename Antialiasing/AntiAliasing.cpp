@@ -206,7 +206,7 @@
 //                        return getColor(refractedRay, rebond + 1);
 //                    }
 //                    else {
-//                        //indirect lighting
+//                        //direct lighting
 //                        double normePL = sqrt((lightPosition - P).NormSquared());//norme de PL
 //                        Vector3 Pshadow, Nshadow, albedoshadow;
 //                        double tshadow;
