@@ -1,3 +1,9 @@
+////////////////////////////////////////////////////////////////////////////
+
+// Adding indirect lighting
+
+////////////////////////////////////////////////////////////////////////////
+
 //#define _CRT_SECURE_NO_WARNINGS 1
 //#include <vector>
 //#include <algorithm>
@@ -76,7 +82,7 @@
 //    return Vector3(a[0] * b[0], a[1] * b[1], a[2] * b[2]);
 //}
 //
-//Vector3 RandomInUnitSphere(const Vector3& N) { //Returns a vector zN+xT1+y*T2, where (N,T1,T2) is a coordinate system, and x,y,z are random variables following a cosine probability distribution (the radius is more likely to be close to N)
+//Vector3 RandomInUnitSphere(const Vector3& N) { //Returns a vector zN+xT1+y*T2, where (N,T1,T2) is a coordinate system, and x,y,z are random variables follorandomng a cosine probability distribution (the radius is more likely to be close to N)
 //    double u1 = uniform(engine); // random number between 0 and 1
 //    double u2 = uniform(engine);
 //    double x = cos(2 * M_PI * u1) * sqrt(1 - u2);
@@ -174,9 +180,9 @@
 //            Vector3 color(0, 0, 0);
 //            if (intersection(r, P, N, albedo, t, miroir, transp)) {// en cas d'intersection avec un objet de la scène
 //                if (miroir) { // si c'est un miroir
-//                    Vector3 Directionreflechie = r.direction - 2 * DotProduct(r.direction, N) * N; // direction de la réflexion
-//                    Ray Rayonreflechi(P + 0.00001 * N, Directionreflechie); //rayon réfléchi, partant du point d'intersection et allant dans la direction réfléchie
-//                    return getColor(Rayonreflechi, rebond + 1);
+//                    Vector3 reflectedDirection = r.direction - 2 * DotProduct(r.direction, N) * N; // direction de la réflexion
+//                    Ray reflectedRay(P + 0.00001 * N, reflectedDirection); //rayon réfléchi, partant du point d'intersection et allant dans la direction réfléchie
+//                    return getColor(reflectedRay, rebond + 1);
 //                }
 //                else {
 //                    if (transp) { // si  il est transparent
@@ -189,34 +195,34 @@
 //                        }
 //                        double angle = 1 - n1 * n1 / (n2 * n2) * (1 - DotProduct(r.direction, N2) * DotProduct(r.direction, N2));
 //                        if (angle < 0) { // si l'angle est plus petit que 0, il y a reflexion
-//                            Vector3 Directionreflechie = r.direction - 2 * DotProduct(r.direction, N) * N;// direction de la réflexion
-//                            Ray Rayonreflechi(P + 0.00001 * N, Directionreflechie);//rayon réfléchi, partant du point d'intersection et allant dans la direction réfléchie
-//                            return getColor(Rayonreflechi, rebond + 1);
+//                            Vector3 reflectedDirection = r.direction - 2 * DotProduct(r.direction, N) * N;// direction de la réflexion
+//                            Ray reflectedRay(P + 0.00001 * N, reflectedDirection);//rayon réfléchi, partant du point d'intersection et allant dans la direction réfléchie
+//                            return getColor(reflectedRay, rebond + 1);
 //                        }
 //                        Vector3 Tt = n1 / n2 * (r.direction - DotProduct(r.direction, N2) * N2); //Composante tangentielle de la direction de réfraction
 //                        Vector3 Tn = -sqrt(angle) * N2; //Composante normale de la direction de réfraction
-//                        Vector3 Directionrefractee = Tt + Tn; //direction de réfraction
-//                        Ray Rayonrefracte(P - 0.0001 * N2, Directionrefractee); //rayon réfracté, partant du point d'intersection et allant dans la direction réfractée
-//                        return getColor(Rayonrefracte, rebond + 1);
+//                        Vector3 refractedDirection = Tt + Tn; //direction de réfraction
+//                        Ray refractedRay(P - 0.0001 * N2, refractedDirection); //rayon réfracté, partant du point d'intersection et allant dans la direction réfractée
+//                        return getColor(refractedRay, rebond + 1);
 //                    }
 //                    else {
-//                        //eclairage direct
+//                        //indirect lighting
 //                        double normePL = sqrt((lightPosition - P).NormSquared());//norme de PL
-//                        Vector3 Pombre, Nombre, albedoombre;
-//                        double tombre;
-//                        bool miroirombre, transombre;
-//                        Ray Rayonombre(P + 0.001 * N, (lightPosition - P) / normePL); // Rayon partant du point d'intersection et dirigé vers la source de lumière
-//                        if (intersection(Rayonombre, Pombre, Nombre, albedoombre, tombre, miroirombre, transombre) && tombre < normePL) {//s'il y a intersection avant d'arriver à la source de lumière
-//                            color = Vector3(0., 0., 0.); //pas éclairé = ombre
+//                        Vector3 Pshadow, Nshadow, albedoshadow;
+//                        double tshadow;
+//                        bool miroirshadow, transshadow;
+//                        Ray Rayonshadow(P + 0.001 * N, (lightPosition - P) / normePL); // Rayon partant du point d'intersection et dirigé vers la source de lumière
+//                        if (intersection(Rayonshadow, Pshadow, Nshadow, albedoshadow, tshadow, miroirshadow, transshadow) && tshadow < normePL) {//s'il y a intersection avant d'arriver à la source de lumière
+//                            color = Vector3(0., 0., 0.); //pas éclairé = shadow
 //                        }
 //                        else {
 //                            double prov = std::max(0., DotProduct(N, (lightPosition - P) / normePL));
 //                            color = lightIntensity / (4 * M_PI * normePL * normePL) * albedo / M_PI * prov;
 //                        }
-//                        //eclairage indirect
-//                        Vector3 wi = RandomInUnitSphere(N);
-//                        Ray Rayonwi(P + 0.00001 * N, wi); //rayon aléatoire
-//                        color = color + TermByTermProduct(albedo, getColor(Rayonwi, rebond + 1));
+//                        //indirect lighting
+//                        Vector3 random = RandomInUnitSphere(N);
+//                        Ray Rayonrandom(P + 0.00001 * N, random); //rayon aléatoire
+//                        color = color + TermByTermProduct(albedo, getColor(Rayonrandom, rebond + 1));
 //
 //
 //                    }
@@ -297,10 +303,11 @@
 //
 //
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 
+// Adding AntiAliasing
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 
 #define _CRT_SECURE_NO_WARNINGS 1
 #include <vector>
@@ -380,7 +387,7 @@ Vector3 TermByTermProduct(const Vector3& a, const Vector3& b) { //term-by-term p
     return Vector3(a[0] * b[0], a[1] * b[1], a[2] * b[2]);
 }
 
-Vector3 RandomInUnitSphere(const Vector3& N) { //Returns a vector zN+xT1+y*T2, where (N,T1,T2) is a coordinate system, and x,y,z are random variables following a cosine probability distribution (the radius is more likely to be close to N)
+Vector3 RandomInUnitSphere(const Vector3& N) { //Returns a vector zN+xT1+y*T2, where (N,T1,T2) is a coordinate system, and x,y,z are random variables follorandomng a cosine probability distribution (the radius is more likely to be close to N)
     double u1 = uniform(engine); // random number between 0 and 1
     double u2 = uniform(engine);
     double x = cos(2 * M_PI * u1) * sqrt(1 - u2);
@@ -474,7 +481,7 @@ public:
             bool mirror, transparent;
             Vector3 P, N, albedo;
             Vector3 color(0, 0, 0);
-            if (intersection(r, P, N, albedo, t, mirror, transparent)) {// in case of intersection with an object in the scene
+            if (intersection(r, P, N, albedo, t, mirror, transparent)) {// in case of intersection randomth an object in the scene
                 if (mirror) { // if it's a mirror
                     Vector3 ReflectedDirection = r.direction - 2 * DotProduct(r.direction, N) * N; // reflection direction
                     Ray ReflectedRay(P + 0.00001 * N, ReflectedDirection); //reflected ray, starting from the intersection point and going in the reflected direction
@@ -516,8 +523,8 @@ public:
                             color = lightIntensity / (4 * M_PI * normPL * normPL) * albedo / M_PI * prov;
                         }
                         //indirect lighting
-                        Vector3 wi = RandomInUnitSphere(N);
-                        Ray RandomRay(P + 0.00001 * N, wi); //random ray
+                        Vector3 random = RandomInUnitSphere(N);
+                        Ray RandomRay(P + 0.00001 * N, random); //random ray
                         color = color + TermByTermProduct(albedo, getColor(RandomRay, bounce + 1));
 
 

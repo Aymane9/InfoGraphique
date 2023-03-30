@@ -1,3 +1,9 @@
+////////////////////////////////////////////////////////////////////////////
+
+// Trying depth of field
+
+////////////////////////////////////////////////////////////////////////////
+
 #define _CRT_SECURE_NO_WARNINGS 1
 #include <vector>
 #include <algorithm>
@@ -29,8 +35,8 @@ public:
         return coordonnees[0] * coordonnees[0] + coordonnees[1] * coordonnees[1] + coordonnees[2] * coordonnees[2];
     }
     Vector3 Normalize() {
-        double norme = sqrt(NormSquared());
-        return Vector3(coordonnees[0] / norme, coordonnees[1] / norme, coordonnees[2] / norme);
+        double norm = sqrt(NormSquared());
+        return Vector3(coordonnees[0] / norm, coordonnees[1] / norm, coordonnees[2] / norm);
     }
 private:
     double coordonnees[3];
@@ -119,6 +125,7 @@ public:
     Sphere(const Vector3& O, double R, const Vector3& albedo, bool mirror = false, bool Transparent = false) : O(O), R(R), albedo(albedo), mirror(mirror), Transparent(Transparent) {
     }
     bool intersection(const Ray& r, Vector3& P, Vector3& N, double& t) {
+        // solve for a*t² + b*t + c = 0
         double a = 1;
         double b = 2 * DotProduct(r.u, r.C - O);
         double c = (r.C - O).NormSquared() - R * R;
@@ -172,7 +179,7 @@ public:
         return intersecte;
     }
 
-    Vector3 obtenircolor(const Ray& r, int bounce, bool lastdiffusion) {
+    Vector3 GetColor(const Ray& r, int bounce, bool lastdiffusion) {
         if (bounce > 5) return Vector3(0., 0., 0.);
         else {
             double t;
@@ -191,7 +198,7 @@ public:
                 if (mirror) {
                     Vector3 reflectedDirection = r.u - 2 * DotProduct(r.u, N) * N;
                     Ray reflectedRay(P + 0.00001 * N, reflectedDirection);
-                    return obtenircolor(reflectedRay, bounce + 1, false);
+                    return GetColor(reflectedRay, bounce + 1, false);
                 }
                 else {
                     if (transp) {
@@ -206,31 +213,31 @@ public:
                         if (angle < 0) {
                             Vector3 reflectedDirection = r.u - 2 * DotProduct(r.u, N) * N;
                             Ray reflectedRay(P + 0.00001 * N, reflectedDirection);
-                            return obtenircolor(reflectedRay, bounce + 1, false);
+                            return GetColor(reflectedRay, bounce + 1, false);
                         }
                         Vector3 Tt = n1 / n2 * (r.u - DotProduct(r.u, N2) * N2);
                         Vector3 Tn = -sqrt(angle) * N2;
                         Vector3 refractedDirection = Tt + Tn;
                         Ray refractedRay(P - 0.0001 * N2, refractedDirection);
-                        return obtenircolor(refractedRay, bounce + 1, false);
+                        return GetColor(refractedRay, bounce + 1, false);
                     }
                     else {
 
                         Vector3 w = RandomInUnitSphere((P - lightPosition).Normalize());
                         Vector3 xp = w * objects[0].R + objects[0].O;
                         Vector3 Pxp = xp - P;
-                        double normePxp = sqrt(Pxp.NormSquared());
+                        double normPxp = sqrt(Pxp.NormSquared());
                         Pxp = Pxp.Normalize();
                         Vector3 Pshadow, Nshadow, albedoshadow;
                         double tshadow;
                         bool mirrorshadow, transshadow;
                         int idshadow;
                         Ray Rayshadow(P + 0.00001 * N, Pxp);
-                        if (intersection(Rayshadow, Pshadow, Nshadow, albedoshadow, tshadow, mirrorshadow, transshadow, idshadow) && tshadow < normePxp - 0.0001) {
+                        if (intersection(Rayshadow, Pshadow, Nshadow, albedoshadow, tshadow, mirrorshadow, transshadow, idshadow) && tshadow < normPxp - 0.0001) {
                             color = Vector3(0., 0., 0.);
                         }
                         else {
-                            color = lightIntensity / (4 * M_PI * M_PI * objects[0].R * objects[0].R) * albedo / M_PI * std::max(0., DotProduct(N, Pxp)) * std::max(0., -DotProduct(w, Pxp)) / (normePxp * normePxp) / (std::max(0., -DotProduct((lightPosition - P).Normalize(), w)) / (M_PI * objects[0].R * objects[0].R));
+                            color = lightIntensity / (4 * M_PI * M_PI * objects[0].R * objects[0].R) * albedo / M_PI * std::max(0., DotProduct(N, Pxp)) * std::max(0., -DotProduct(w, Pxp)) / (normPxp * normPxp) / (std::max(0., -DotProduct((lightPosition - P).Normalize(), w)) / (M_PI * objects[0].R * objects[0].R));
                         }
 
 
@@ -238,7 +245,7 @@ public:
 
                         Vector3 random = RandomInUnitSphere(N);
                         Ray Rayrandom(P + 0.00001 * N, random);
-                        color = color + TermByTermProduct(albedo, obtenircolor(Rayrandom, bounce + 1, true));
+                        color = color + TermByTermProduct(albedo, GetColor(Rayrandom, bounce + 1, true));
 
 
                     }
@@ -316,7 +323,7 @@ int main() {
 
                 Ray r(RandOrigin, Raydir);
 
-                color = color + scene.obtenircolor(r, 0, false);
+                color = color + scene.GetColor(r, 0, false);
 
             }
             color = color / nmbRay;
@@ -332,7 +339,7 @@ int main() {
             image[((H - i - 1) * W + j) * 3 + 2] = std::min(255., color[2]);
         }
     }
-    stbi_write_png("softshadows.png", W, H, 3, &image[0], 0);
+    stbi_write_png("depthoffield.png", W, H, 3, &image[0], 0);
 
     return 0;
 }
